@@ -1,0 +1,10 @@
+/__pycache__
+/.vscode
+/hmm_derby_env
+/images
+requirements.txt
+requirements_win.txt
+sequences.json
+settings.yml
+README.md
+main.kv
