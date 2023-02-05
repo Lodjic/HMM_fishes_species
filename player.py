@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from player_controller_hmm import PlayerControllerHMMAbstract
 import numpy as np
 import time
@@ -38,7 +36,7 @@ def where_not_equal(l, condition):
     return indexes
 
 
-##### HMM useful algorithms #####
+##### HMM useful fcts #####
 
 def compute_alpha_scaled_coeffs(A, B, pi, obs):
     T = len(obs) - 1  # index of final step
@@ -101,12 +99,13 @@ def compute_gamma_coeffs(A, obs, di_gamma_mat, alpha_mat):
     for t in range(T-1):  # go until (T-1)
         for i in range(nb_states):
             gamma_mat[i][t] = sum([di_gamma_mat[i][t][j] for j in range(nb_states)])
-    # Pas compris ce cas spécifique
     for i in range(nb_states):
         gamma_mat[i][T-1] = alpha_mat[i][T-1]
     return gamma_mat
 
-    
+
+####################### Fcts to update matrixes ####################### 
+
 def update_A(A, di_gamma_mat, gamma_mat):
     new_A = [[-1] * len(A[0]) for k in range(len(A))]
     for i in range(len(A)):
@@ -171,9 +170,9 @@ def compute_mat_diff(mat1, mat2):
     return diff
 
 
-##### Resolution of the exercise 3 #####
+####################### Baum-Welch algorithm #######################
 
-def baum_welch_iter(A, B, pi, obs):
+def baum_welch_one_iteration(A, B, pi, obs):
     alpha_mat, scaling_vec = compute_alpha_scaled_coeffs(A, B, pi, obs)
     beta_mat = compute_beta_scaled_coeffs(A, B, obs, scaling_vec)
     di_gamma_mat = compute_di_gamma_coeffs(A, B, obs, alpha_mat, beta_mat)
@@ -206,6 +205,7 @@ def baum_welch(A, B, pi, obs, time_max):
     return
 
 
+####################### Player controller class #######################
 class PlayerControllerHMM(PlayerControllerHMMAbstract):
     def init_parameters(self):
         """
@@ -217,13 +217,13 @@ class PlayerControllerHMM(PlayerControllerHMMAbstract):
         nb_fishes = 70
 
         self.A_matrixes = []
-        for i in range(nb_species):
+        for _ in range(nb_species):
             self.A_matrixes.append(construct_almost_uniform_matrix(nb_states, nb_states, 0.05))
         self.B_matrixes = []
-        for i in range(nb_species):
+        for _ in range(nb_species):
             self.B_matrixes.append(construct_almost_uniform_matrix(nb_states, 8, 0.02))
         self.pi_matrixes = []
-        for i in range(nb_species):
+        for _ in range(nb_species):
             self.pi_matrixes.append(construct_almost_uniform_matrix(1, nb_states, 0.05))
         self.observations = [[] for i in range(nb_fishes)]
         self.fish_species = [-1] * nb_fishes
@@ -239,9 +239,6 @@ class PlayerControllerHMM(PlayerControllerHMMAbstract):
         :param observations: a list of N_FISH observations, encoded as integers
         :return: None or a tuple (fish_id, fish_type)
         """
-
-        # This code would make a random guess on each step:
-        # return (step % N_FISH, random.randint(0, N_SPECIES - 1))
 
         nb_states = 4
         nb_species = 7
@@ -286,12 +283,12 @@ class PlayerControllerHMM(PlayerControllerHMMAbstract):
                 time_max = 1/len(fish_already_known_indexes)
                 for fish_index in fish_already_known_indexes:
                     #print(f"Baum-welch for fish index {fish_index} of species {self.fish_species[fish_index]}")
-                    # print(self.A_matrixes[true_type])
+                    #print(self.A_matrixes[true_type])
                     baum_welch(self.A_matrixes[true_type], self.B_matrixes[true_type], self.pi_matrixes[true_type], self.observations[fish_index], time_max)
                 return
                 
             except ZeroDivisionError:
-                #print(f"exception levé pour le type {true_type}")
+                #print(f"Exception raised of type {true_type}")
                 self.A_matrixes[true_type] = construct_almost_uniform_matrix(nb_states, nb_states, 0.05)
                 self.B_matrixes[true_type] = construct_almost_uniform_matrix(nb_states, 8, 0.02)
                 self.pi_matrixes[true_type] = construct_almost_uniform_matrix(1, nb_states, 0.05)

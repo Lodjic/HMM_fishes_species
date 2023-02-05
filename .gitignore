@@ -1,3 +1,4 @@
+.DS_Store
 /__pycache__
 /.vscode
 /hmm_derby_env
@@ -6,5 +7,6 @@ requirements.txt
 requirements_win.txt
 sequences.json
 settings.yml
+README-og.md
 README.md
 main.kv
